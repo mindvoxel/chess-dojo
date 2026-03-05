@@ -18,7 +18,7 @@ import { useEngine } from './useEngine';
 export function useEval(enabled: boolean, engineName?: EngineName): PositionEval | undefined {
     const [currentPosition, setCurrentPosition] = useState<PositionEval>();
     const { chess } = useChess();
-    const engine = useEngine(enabled, engineName);
+    const engine = useEngine(true, engineName);
     const [depth] = useLocalStorage(ENGINE_DEPTH.Key, ENGINE_DEPTH.Default);
     const [multiPv] = useLocalStorage(ENGINE_LINE_COUNT.Key, ENGINE_LINE_COUNT.Default);
     const [threads, setThreads] = useLocalStorage(ENGINE_THREADS.Key, ENGINE_THREADS.Default);
@@ -36,7 +36,7 @@ export function useEval(enabled: boolean, engineName?: EngineName): PositionEval
     }, [threads, setThreads]);
 
     useEffect(() => {
-        if (!enabled || !chess || !engine || !engineName) {
+        if (!chess || !engine || !engineName) {
             return;
         }
 
@@ -58,31 +58,35 @@ export function useEval(enabled: boolean, engineName?: EngineName): PositionEval
                 return;
             }
 
-            try {
-                const rawPositionEval = await engine.evaluatePositionWithUpdate({
-                    fen,
-                    depth,
-                    multiPv,
-                    threads: threads || 4,
-                    hash: Math.pow(2, hash),
-                    setPartialEval: (positionEval: PositionEval) => {
-                        if (positionEval.lines[0]?.fen === chess.fen()) {
-                            setCurrentPosition(positionEval);
-                        }
-                    },
-                });
+            // Now possible to get just the saved engine lines so the user can see
+            // the previously evaluated lines while disabled. The position will not be evaluated
+            // again while disabled.
+            if (enabled) {
+                try {
+                    const rawPositionEval = await engine.evaluatePositionWithUpdate({
+                        fen,
+                        depth,
+                        multiPv,
+                        threads: threads || 4,
+                        hash: Math.pow(2, hash),
+                        setPartialEval: (positionEval: PositionEval) => {
+                            if (positionEval.lines[0]?.fen === chess.fen()) {
+                                setCurrentPosition(positionEval);
+                            }
+                        },
+                    });
 
-                savedEvals.current = {
-                    ...savedEvals.current,
-                    [fen]: { ...rawPositionEval, engine: engineName },
-                };
-            } catch (err) {
-                if (err !== E_CANCELED) {
-                    throw err;
+                    savedEvals.current = {
+                        ...savedEvals.current,
+                        [fen]: { ...rawPositionEval, engine: engineName },
+                    };
+                } catch (err) {
+                    if (err !== E_CANCELED) {
+                        throw err;
+                    }
                 }
             }
         };
-
         const observer = {
             types: [EventType.Initialized, EventType.LegalMove],
             handler: evaluate,

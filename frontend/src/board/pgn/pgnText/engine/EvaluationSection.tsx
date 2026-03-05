@@ -16,10 +16,12 @@ export const EvaluationSection = ({
     engineInfo,
     allLines,
     maxLines,
+    enabled,
 }: {
     engineInfo: EngineInfo;
     allLines: LineEval[];
     maxLines: number;
+    enabled: boolean;
 }) => {
     const anchorRef = useRef<HTMLUListElement>(null);
     const [hoverMove, setHoverMove] = useState<HoverMove>();
@@ -55,6 +57,7 @@ export const EvaluationSection = ({
                         key={i}
                         line={allLines[i]}
                         isTop={i === 0}
+                        enabled={enabled}
                     />
                 ))}
             </List>

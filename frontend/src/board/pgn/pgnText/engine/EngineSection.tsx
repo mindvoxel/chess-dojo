@@ -152,7 +152,7 @@ export default function EngineSection() {
                     <Settings />
                 </Stack>
 
-                {enabled && !isGameOver && (
+                {engineLines.length > 0 && engineLines[0].pv.length > 0 && !isGameOver && (
                     <Stack>
                         {isGameOver ? (
                             <Typography align='center' fontSize='0.9rem'>
@@ -163,6 +163,7 @@ export default function EngineSection() {
                                 engineInfo={engineInfo}
                                 allLines={engineLines}
                                 maxLines={linesNumber}
+                                enabled={enabled}
                             />
                         )}
                     </Stack>
