@@ -50,7 +50,6 @@ import {
     InputAdornment,
     MenuItem,
     Pagination,
-    Paper,
     Stack,
     TextField,
     Typography,
@@ -129,6 +128,7 @@ interface FilterState {
     timeClass: string;
     timeControl: string;
     result: string;
+    resultReason: string;
     rated: string;
     cohortMatch: string;
 }
@@ -138,6 +138,7 @@ const EMPTY_FILTERS: FilterState = {
     timeClass: '',
     timeControl: '',
     result: '',
+    resultReason: '',
     rated: '',
     cohortMatch: '',
 };
@@ -146,12 +147,12 @@ const PAGE_SIZE = 10;
 
 function formatTimeControl(game: OnlineGame): string {
     if (game.timeClass === OnlineGameTimeClass.Daily) return 'daily';
-    return `${game.timeControl.initialSeconds / 60} | ${game.timeControl.incrementSeconds}`;
+    return `${game.timeControl.initialSeconds / 60}+${game.timeControl.incrementSeconds}`;
 }
 
 function parseTimeControlTotal(s: string): number {
     if (s === 'daily') return Infinity;
-    const [min, inc] = s.split(' | ').map(Number);
+    const [min, inc] = s.split('+').map(Number);
     return min * 60 + inc;
 }
 
@@ -165,6 +166,7 @@ function applyFilters(
         if (filters.timeClass && game.timeClass !== filters.timeClass) return false;
         if (filters.timeControl && formatTimeControl(game) !== filters.timeControl) return false;
         if (filters.result && game.result !== filters.result) return false;
+        if (filters.resultReason && game.resultReason !== filters.resultReason) return false;
         if (filters.rated) {
             const isRated = filters.rated === 'true';
             if (game.rated !== isRated) return false;
@@ -231,118 +233,138 @@ function InlineFilters({
 
     return (
         <Collapse in={open}>
-            <Paper elevation={2} sx={{ p: 1.5, my: 1 }}>
-                <Grid container spacing={1}>
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                        <TextField
-                            select
-                            fullWidth
-                            size='small'
-                            label='Source'
-                            value={filters.source}
-                            onChange={(e) => updateFilter('source', e.target.value)}
-                        >
-                            <MenuItem value=''>All</MenuItem>
-                            <MenuItem value={GameImportTypes.lichessGame}>Lichess</MenuItem>
-                            <MenuItem value={GameImportTypes.chesscomGame}>Chess.com</MenuItem>
-                        </TextField>
-                    </Grid>
-
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                        <TextField
-                            select
-                            fullWidth
-                            size='small'
-                            label='Time Class'
-                            value={filters.timeClass}
-                            onChange={(e) => updateFilter('timeClass', e.target.value)}
-                        >
-                            <MenuItem value=''>All</MenuItem>
-                            {Object.values(OnlineGameTimeClass).map((tc) => (
-                                <MenuItem key={tc} value={tc}>
-                                    {tc}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Grid>
-
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                        <TextField
-                            select
-                            fullWidth
-                            size='small'
-                            label='Time Control'
-                            value={filters.timeControl}
-                            onChange={(e) => updateFilter('timeControl', e.target.value)}
-                        >
-                            <MenuItem value=''>All</MenuItem>
-                            {timeControlOptions.map((tc) => (
-                                <MenuItem key={tc} value={tc}>
-                                    {tc}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Grid>
-
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                        <TextField
-                            select
-                            fullWidth
-                            size='small'
-                            label='Result'
-                            value={filters.result}
-                            onChange={(e) => updateFilter('result', e.target.value)}
-                        >
-                            <MenuItem value=''>All</MenuItem>
-                            {Object.values(GameResult).map((r) => (
-                                <MenuItem key={r} value={r}>
-                                    {r}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </Grid>
-
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                        <TextField
-                            select
-                            fullWidth
-                            size='small'
-                            label='Rated'
-                            value={filters.rated}
-                            onChange={(e) => updateFilter('rated', e.target.value)}
-                        >
-                            <MenuItem value=''>All</MenuItem>
-                            <MenuItem value='true'>Rated</MenuItem>
-                            <MenuItem value='false'>Casual</MenuItem>
-                        </TextField>
-                    </Grid>
-
-                    <Grid size={{ xs: 6, sm: 4 }}>
-                        <TextField
-                            select
-                            fullWidth
-                            size='small'
-                            label='Meets Cohort Time'
-                            value={filters.cohortMatch}
-                            onChange={(e) => updateFilter('cohortMatch', e.target.value)}
-                        >
-                            <MenuItem value=''>All</MenuItem>
-                            <MenuItem value='true'>Yes</MenuItem>
-                            <MenuItem value='false'>No</MenuItem>
-                        </TextField>
-                    </Grid>
-
-                    <Grid size={12}>
-                        <Button
-                            size='small'
-                            onClick={() => onFilterChange(EMPTY_FILTERS)}
-                            disabled={!hasActiveFilters}
-                        >
-                            Clear filters
-                        </Button>
-                    </Grid>
+            <Grid container rowSpacing={1.5} columnSpacing={1}>
+                <Grid size={{ xs: 6, sm: 4 }}>
+                    <TextField
+                        select
+                        fullWidth
+                        size='small'
+                        label='Source'
+                        value={filters.source}
+                        onChange={(e) => updateFilter('source', e.target.value)}
+                    >
+                        <MenuItem value=''>All</MenuItem>
+                        <MenuItem value={GameImportTypes.lichessGame}>Lichess</MenuItem>
+                        <MenuItem value={GameImportTypes.chesscomGame}>Chess.com</MenuItem>
+                    </TextField>
                 </Grid>
-            </Paper>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                    <TextField
+                        select
+                        fullWidth
+                        size='small'
+                        label='Time Class'
+                        value={filters.timeClass}
+                        onChange={(e) => updateFilter('timeClass', e.target.value)}
+                    >
+                        <MenuItem value=''>All</MenuItem>
+                        {Object.values(OnlineGameTimeClass).map((tc) => (
+                            <MenuItem key={tc} value={tc}>
+                                {tc[0].toUpperCase()}
+                                {tc.slice(1)}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                </Grid>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                    <TextField
+                        select
+                        fullWidth
+                        size='small'
+                        label='Time Control'
+                        value={filters.timeControl}
+                        onChange={(e) => updateFilter('timeControl', e.target.value)}
+                    >
+                        <MenuItem value=''>All</MenuItem>
+                        {timeControlOptions.map((tc) => (
+                            <MenuItem key={tc} value={tc}>
+                                {tc === 'daily' ? 'Daily' : tc}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                </Grid>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                    <TextField
+                        select
+                        fullWidth
+                        size='small'
+                        label='Result'
+                        value={filters.result}
+                        onChange={(e) => updateFilter('result', e.target.value)}
+                    >
+                        <MenuItem value=''>All</MenuItem>
+                        <MenuItem value='1-0'>White wins</MenuItem>
+                        <MenuItem value='1/2-1/2'>Draw</MenuItem>
+                        <MenuItem value='0-1'>Black wins</MenuItem>
+                        <MenuItem value='*'>Unknown</MenuItem>
+                    </TextField>
+                </Grid>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                    <TextField
+                        select
+                        fullWidth
+                        size='small'
+                        label='Result Reason'
+                        value={filters.resultReason}
+                        onChange={(e) => updateFilter('resultReason', e.target.value)}
+                    >
+                        <MenuItem value=''>All</MenuItem>
+                        {Object.values(OnlineGameResultReason).map(
+                            (r) =>
+                                r !== OnlineGameResultReason.Unknown && (
+                                    <MenuItem key={r} value={r}>
+                                        {r[0].toUpperCase()}
+                                        {r.slice(1)}
+                                    </MenuItem>
+                                ),
+                        )}
+                    </TextField>
+                </Grid>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                    <TextField
+                        select
+                        fullWidth
+                        size='small'
+                        label='Rated'
+                        value={filters.rated}
+                        onChange={(e) => updateFilter('rated', e.target.value)}
+                    >
+                        <MenuItem value=''>All</MenuItem>
+                        <MenuItem value='true'>Rated</MenuItem>
+                        <MenuItem value='false'>Casual</MenuItem>
+                    </TextField>
+                </Grid>
+
+                <Grid size={{ xs: 6, sm: 4 }}>
+                    <TextField
+                        select
+                        fullWidth
+                        size='small'
+                        label='Meets Cohort Time'
+                        value={filters.cohortMatch}
+                        onChange={(e) => updateFilter('cohortMatch', e.target.value)}
+                    >
+                        <MenuItem value=''>All</MenuItem>
+                        <MenuItem value='true'>Yes</MenuItem>
+                        <MenuItem value='false'>No</MenuItem>
+                    </TextField>
+                </Grid>
+
+                <Grid size={12}>
+                    <Button
+                        size='small'
+                        onClick={() => onFilterChange(EMPTY_FILTERS)}
+                        disabled={!hasActiveFilters}
+                    >
+                        Clear filters
+                    </Button>
+                </Grid>
+            </Grid>
         </Collapse>
     );
 }
@@ -353,11 +375,7 @@ function GameCard({ game, onClick }: { game: OnlineGame; onClick: (game: OnlineG
     const dateStr = toDojoDateString(createdAt, user?.timezoneOverride);
     const timeStr = toDojoTimeString(createdAt, user?.timezoneOverride, user?.timeFormat);
 
-    const tcLabel =
-        game.timeClass === OnlineGameTimeClass.Daily
-            ? 'daily'
-            : `${game.timeControl.initialSeconds / 60} | ${game.timeControl.incrementSeconds}`;
-
+    const tcLabel = formatTimeControl(game);
     const matchesCohort = timeControlMatches(user?.dojoCohort, game.timeControl);
 
     return (
@@ -373,6 +391,7 @@ function GameCard({ game, onClick }: { game: OnlineGame; onClick: (game: OnlineG
                 py: 1.5,
                 '&:hover': { backgroundColor: 'action.hover' },
             }}
+            data-testid={`online-game-card-${game.id}`}
         >
             <Stack spacing={1.125}>
                 <Stack
@@ -453,7 +472,7 @@ export const OnlineGameForm = ({ loading, onSubmit, onClose }: ImportDialogProps
 
     const timeControlOptions = useMemo(() => {
         const unique = new Set(games.map(formatTimeControl));
-        return [...unique].sort((a, b) => parseTimeControlTotal(a) - parseTimeControlTotal(b));
+        return [...unique].sort((a, b) => parseTimeControlTotal(b) - parseTimeControlTotal(a));
     }, [games]);
 
     const processedGames = useMemo(() => {
@@ -551,7 +570,7 @@ export const OnlineGameForm = ({ loading, onSubmit, onClose }: ImportDialogProps
     return (
         <>
             <DialogTitle>Import Online Game</DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{ height: fetchGames ? '85vh' : undefined }}>
                 <Stack>
                     <TextField
                         data-testid='online-game-url'
@@ -581,7 +600,7 @@ export const OnlineGameForm = ({ loading, onSubmit, onClose }: ImportDialogProps
                     <OrDivider header='Recent Games' />
 
                     {fetchGames && user?.dojoCohort && (
-                        <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 1 }}>
+                        <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 2 }}>
                             <CohortIcon
                                 cohort={user.dojoCohort}
                                 tooltip={user.dojoCohort}
@@ -603,7 +622,26 @@ export const OnlineGameForm = ({ loading, onSubmit, onClose }: ImportDialogProps
 
                     {fetchGames && (
                         <>
-                            <Stack direction='row' spacing={1} alignItems='center' sx={{ my: 1 }}>
+                            <TextField
+                                size='small'
+                                data-testid='online-game-search'
+                                placeholder='Search by player name'
+                                value={searchText}
+                                onChange={(e) => handleSearchChange(e.target.value)}
+                                fullWidth
+                                slotProps={{
+                                    input: {
+                                        startAdornment: (
+                                            <InputAdornment position='start'>
+                                                <SearchIcon fontSize='small' />
+                                            </InputAdornment>
+                                        ),
+                                    },
+                                }}
+                                sx={{ mb: 2 }}
+                            />
+
+                            <Stack direction='row' spacing={1} alignItems='center' sx={{ mb: 2 }}>
                                 <Button
                                     size='small'
                                     startIcon={<FilterListIcon />}
@@ -632,23 +670,6 @@ export const OnlineGameForm = ({ loading, onSubmit, onClose }: ImportDialogProps
                                     ))}
                                 </TextField>
                             </Stack>
-
-                            <TextField
-                                size='small'
-                                placeholder='Search by player name'
-                                value={searchText}
-                                onChange={(e) => handleSearchChange(e.target.value)}
-                                fullWidth
-                                slotProps={{
-                                    input: {
-                                        startAdornment: (
-                                            <InputAdornment position='start'>
-                                                <SearchIcon fontSize='small' />
-                                            </InputAdornment>
-                                        ),
-                                    },
-                                }}
-                            />
 
                             <InlineFilters
                                 filters={filters}
@@ -682,6 +703,7 @@ export const OnlineGameForm = ({ loading, onSubmit, onClose }: ImportDialogProps
                                 {pageCount > 1 && (
                                     <Stack alignItems='center' sx={{ pt: 2 }}>
                                         <Pagination
+                                            data-testid='online-games-pagination'
                                             count={pageCount}
                                             page={page}
                                             onChange={(_, p) => setPage(p)}
