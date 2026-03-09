@@ -48,11 +48,11 @@ export default function EngineSection() {
     const engineLines = evaluation?.lines?.length
         ? evaluation.lines
         : (Array.from({ length: Math.max(1, linesNumber) }).map((_, i) => ({
-            fen: '',
-            pv: [],
-            depth: 0,
-            multiPv: i + 1,
-        })) as LineEval[]);
+              fen: '',
+              pv: [],
+              depth: 0,
+              multiPv: i + 1,
+          })) as LineEval[]);
     const isMate = engineLines.some((line) => line.mate);
 
     const showCloudEval =
@@ -92,11 +92,11 @@ export default function EngineSection() {
                             <Typography variant='h5'>
                                 {showCloudEval
                                     ? formatLineEval({
-                                        cp: normalizeChessDBScore(
-                                            chessDbPv?.score,
-                                            chess?.turn() || 'w',
-                                        ),
-                                    })
+                                          cp: normalizeChessDBScore(
+                                              chessDbPv?.score,
+                                              chess?.turn() || 'w',
+                                          ),
+                                      })
                                     : formatLineEval(engineLines[0])}
                             </Typography>
                             <Tooltip
@@ -222,11 +222,10 @@ export default function EngineSection() {
                             chessDbLoading={chessDbLoading}
                             enabled={enabled}
                         />
-                    </Stack >
-                )
-                }
-            </Stack >
-        </Paper >
+                    </Stack>
+                )}
+            </Stack>
+        </Paper>
     );
 }
 

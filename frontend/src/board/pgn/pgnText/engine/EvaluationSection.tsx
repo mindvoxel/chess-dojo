@@ -145,16 +145,18 @@ function CloudEvalSection({
     const line = pv
         ? chessDbPvToLineEval(pv, currentFen)
         : {
-            fen: currentFen,
-            depth: 0,
-            pv: [],
-            cp: undefined,
-            mate: undefined,
-            multiPv: 1,
-            resultPercentages: undefined,
-        };
+              fen: currentFen,
+              depth: 0,
+              pv: [],
+              cp: undefined,
+              mate: undefined,
+              multiPv: 1,
+              resultPercentages: undefined,
+          };
 
-    return <LineEvaluation engineInfo={engineInfo} line={line} icon={cloudIcon} enabled={enabled} />;
+    return (
+        <LineEvaluation engineInfo={engineInfo} line={line} icon={cloudIcon} enabled={enabled} />
+    );
 }
 
 /**

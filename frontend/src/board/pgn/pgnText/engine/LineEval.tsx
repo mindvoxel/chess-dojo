@@ -175,20 +175,24 @@ export default function LineEvaluation({ engineInfo, line, isTop, icon, enabled 
                                 },
                                 ...(primaryEvalType === PrimaryEvalType.Eval
                                     ? {
-                                        width: '45px',
-                                        minWidth: '45px',
-                                    }
+                                          width: '45px',
+                                          minWidth: '45px',
+                                      }
                                     : {
-                                        px: 0.5,
-                                        whiteSpace: 'nowrap',
-                                    }),
+                                          px: 0.5,
+                                          whiteSpace: 'nowrap',
+                                      }),
                             }}
                             data-fen={moves.at(-1)?.after}
                             data-from={moves.at(-1)?.from}
                             data-to={moves.at(-1)?.to}
                         >
                             {showSkeleton ? (
-                                <Skeleton variant='rounded' animation='wave' sx={{ color: 'transparent' }}>
+                                <Skeleton
+                                    variant='rounded'
+                                    animation='wave'
+                                    sx={{ color: 'transparent' }}
+                                >
                                     placeholder
                                 </Skeleton>
                             ) : (
@@ -236,7 +240,7 @@ export default function LineEvaluation({ engineInfo, line, isTop, icon, enabled 
                     })
                 )}
             </Box>
-        </ListItem >
+        </ListItem>
     );
 }
 
