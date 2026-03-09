@@ -90,8 +90,6 @@ export function useEval(enabled: boolean, engineName?: EngineName): PositionEval
                         throw err;
                     }
                 }
-            } else {
-                setCurrentPosition(undefined);
             }
         };
         const observer = {
