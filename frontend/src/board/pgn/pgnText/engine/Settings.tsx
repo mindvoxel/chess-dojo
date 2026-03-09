@@ -10,6 +10,7 @@ import {
     EngineName,
     engines,
     HIGHLIGHT_ENGINE_LINES,
+    PERSIST_ENGINE_LINES,
 } from '@/stockfish/engine/engine';
 import Icon from '@/style/Icon';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -70,6 +71,10 @@ export default function Settings() {
     const [highlightEngineLines, setHighlightEngineLines] = useLocalStorage<boolean>(
         HIGHLIGHT_ENGINE_LINES.Key,
         HIGHLIGHT_ENGINE_LINES.Default,
+    );
+    const [persistEngineLines, setPersistEngineLines] = useLocalStorage<boolean>(
+        PERSIST_ENGINE_LINES.Key,
+        PERSIST_ENGINE_LINES.Default,
     );
 
     useEffect(() => {
@@ -208,6 +213,16 @@ export default function Settings() {
                                 />
                             }
                             label='Highlight engine lines in PGN text'
+                        />
+
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={persistEngineLines}
+                                    onChange={(e) => setPersistEngineLines(e.target.checked)}
+                                />
+                            }
+                            label='Persist last evaluated lines after disabling engine'
                         />
                     </Stack>
 

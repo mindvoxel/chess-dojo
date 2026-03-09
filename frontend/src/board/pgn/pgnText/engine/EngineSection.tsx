@@ -1,5 +1,11 @@
 import { useChess } from '@/board/pgn/PgnBoard';
-import { ENGINE_LINE_COUNT, ENGINE_NAME, engines, LineEval } from '@/stockfish/engine/engine';
+import {
+    ENGINE_LINE_COUNT,
+    ENGINE_NAME,
+    engines,
+    LineEval,
+    PERSIST_ENGINE_LINES,
+} from '@/stockfish/engine/engine';
 import { useEval } from '@/stockfish/hooks/useEval';
 import Icon from '@/style/Icon';
 import { Box, Paper, Stack, Switch, Tooltip, Typography } from '@mui/material';
@@ -17,6 +23,10 @@ export default function EngineSection() {
     }
 
     const [linesNumber] = useLocalStorage(ENGINE_LINE_COUNT.Key, ENGINE_LINE_COUNT.Default);
+    const [persistEngineLines] = useLocalStorage<boolean>(
+        PERSIST_ENGINE_LINES.Key,
+        PERSIST_ENGINE_LINES.Default,
+    );
 
     const [enabled, setEnabled] = useState(false);
     const evaluation = useEval(enabled, engineInfo.name);
@@ -34,6 +44,10 @@ export default function EngineSection() {
           })) as LineEval[]);
 
     const resultPercentages = engineLines[0]?.resultPercentages;
+
+    const shouldShowEvaluationSection = persistEngineLines
+        ? engineLines.length > 0 && engineLines[0].pv.length > 0 && !isGameOver
+        : enabled && !isGameOver;
 
     return (
         <Paper
@@ -152,7 +166,7 @@ export default function EngineSection() {
                     <Settings />
                 </Stack>
 
-                {engineLines.length > 0 && engineLines[0].pv.length > 0 && !isGameOver && (
+                {shouldShowEvaluationSection && (
                     <Stack>
                         {isGameOver ? (
                             <Typography align='center' fontSize='0.9rem'>

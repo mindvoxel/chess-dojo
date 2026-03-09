@@ -18,7 +18,7 @@ import { useEngine } from './useEngine';
 export function useEval(enabled: boolean, engineName?: EngineName): PositionEval | undefined {
     const [currentPosition, setCurrentPosition] = useState<PositionEval>();
     const { chess } = useChess();
-    const engine = useEngine(true, engineName);
+    const engine = useEngine(enabled, engineName);
     const [depth] = useLocalStorage(ENGINE_DEPTH.Key, ENGINE_DEPTH.Default);
     const [multiPv] = useLocalStorage(ENGINE_LINE_COUNT.Key, ENGINE_LINE_COUNT.Default);
     const [threads, setThreads] = useLocalStorage(ENGINE_THREADS.Key, ENGINE_THREADS.Default);
@@ -36,32 +36,36 @@ export function useEval(enabled: boolean, engineName?: EngineName): PositionEval
     }, [threads, setThreads]);
 
     useEffect(() => {
-        if (!chess || !engine || !engineName) {
+        if (!chess || !engineName) {
             return;
         }
 
-        if (!engine?.isReady()) {
-            logger.error?.(`Engine ${engineName} not ready`);
+        if (enabled && engine) {
+            engine.init();
+            if (!engine.isReady()) {
+                logger.error?.(`Engine ${engineName} not ready`);
+            }
         }
 
         const evaluate = async () => {
-            setCurrentPosition(undefined);
             const fen = chess.fen();
             const savedEval = savedEvals.current[fen];
 
-            if (
-                savedEval?.engine === engineName &&
-                savedEval.lines.length >= multiPv &&
-                savedEval.lines[0].depth >= depth
-            ) {
-                setCurrentPosition(savedEval);
-                return;
+            if (savedEval?.engine === engineName) {
+                const meetsDepth =
+                    savedEval.lines.length >= multiPv && savedEval.lines[0].depth >= depth;
+
+                // When disabled, show whatever was previously evaluated.
+                // When enabled, only reuse if the saved eval meets the
+                // current depth/line requirements.
+                if (meetsDepth || !enabled) {
+                    setCurrentPosition(savedEval);
+                    return;
+                }
             }
 
-            // Now possible to get just the saved engine lines so the user can see
-            // the previously evaluated lines while disabled. The position will not be evaluated
-            // again while disabled.
-            if (enabled) {
+            if (enabled && engine) {
+                setCurrentPosition(undefined);
                 try {
                     const rawPositionEval = await engine.evaluatePositionWithUpdate({
                         fen,
@@ -72,19 +76,22 @@ export function useEval(enabled: boolean, engineName?: EngineName): PositionEval
                         setPartialEval: (positionEval: PositionEval) => {
                             if (positionEval.lines[0]?.fen === chess.fen()) {
                                 setCurrentPosition(positionEval);
+                                savedEvals.current[fen] = {
+                                    ...positionEval,
+                                    engine: engineName,
+                                };
                             }
                         },
                     });
 
-                    savedEvals.current = {
-                        ...savedEvals.current,
-                        [fen]: { ...rawPositionEval, engine: engineName },
-                    };
+                    savedEvals.current[fen] = { ...rawPositionEval, engine: engineName };
                 } catch (err) {
                     if (err !== E_CANCELED) {
                         throw err;
                     }
                 }
+            } else {
+                setCurrentPosition(undefined);
             }
         };
         const observer = {
@@ -94,6 +101,7 @@ export function useEval(enabled: boolean, engineName?: EngineName): PositionEval
 
         void evaluate();
         chess.addObserver(observer);
+
         return () => {
             void engine?.stopSearch();
             chess.removeObserver(observer);
