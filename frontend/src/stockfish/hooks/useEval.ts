@@ -41,7 +41,6 @@ export function useEval(enabled: boolean, engineName?: EngineName): PositionEval
         }
 
         if (enabled && engine) {
-            engine.init();
             if (!engine.isReady()) {
                 logger.error?.(`Engine ${engineName} not ready`);
             }
